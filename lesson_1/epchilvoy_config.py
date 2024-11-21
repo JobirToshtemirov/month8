@@ -62,7 +62,7 @@ async def handle_admin_reply(message: Message):
         target_user_id = int(message.reply_to_message.forward_from.id)
         await bot.send_message(target_user_id, f"Admindan javob:\n{message.text}")
     except AttributeError:
-        await message.reply("Hato")
+        await message.reply("Kelgan habarga javob qaytarishingiz mumkun")
 
 
 keyboard = ReplyKeyboardMarkup(
