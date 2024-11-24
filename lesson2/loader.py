@@ -3,7 +3,7 @@ import logging
 from aiogram import Dispatcher, Bot, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
-from lesson2.main.config import BOT_TOKEN
+from main.config import BOT_TOKEN
 
 bot = Bot(BOT_TOKEN, parse_mode=types.ParseMode.HTML)
 storage = MemoryStorage()
@@ -18,3 +18,4 @@ logging.basicConfig(
         logging.FileHandler("bot.log", mode="a")
     ]
 )
+logger = logging.getLogger(__name__)

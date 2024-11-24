@@ -1,33 +1,17 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
+from keyboards import keyboards
+from keyboards.keyboards import keyboard
+from loader import dp, bot
 from main.config import ADMINS
+from states.states import UserStates
 
 
-keyboard = ReplyKeyboardMarkup(
-    resize_keyboard=True
-).add(
-    KeyboardButton(text="🍴 Меню")
-).row(
-    KeyboardButton(text="🛍 Мои заказы"),
-).add(
-    KeyboardButton(text="✍️ Оставить отзыв"),
-    KeyboardButton(text="⚙️ Настройки")
-)
-
-
-class UserStates(StatesGroup):
-    get_message = State()
-
-
-@dp.message_handler(commands=["start"])
-async def start(message: types.Message):
-    await message.answer(
-        text=f"<b>Assalomu alaykum hurmatli {message.from_user.full_name}, botga hush kelibsiz!</b>",
-        reply_markup=keyboard
-    )
+@dp.message_handler(commands="start")
+async def start_handler(message: types.Message):
+    text = f"<b> Assalomu alaykum\t{message.from_user.full_name}\tTJ-food (test) botiga hush kelibsiz </b>"
+    await message.answer(text=text, reply_markup=keyboard)
 
 
 @dp.message_handler(text=["🍴 Меню"])
@@ -43,17 +27,18 @@ async def zakazlar(message: types.Message):
 @dp.message_handler(text=["✍️ Оставить отзыв"])
 async def handle_user_message(message: types.Message, state: FSMContext):
     await message.answer("Habaringizni kiriting: 👇")
-    await state.set_state(UserStates.get_message.state)
+    await UserStates.get_message.set()
 
 
 @dp.message_handler(state=UserStates.get_message, content_types=types.ContentType.TEXT)
 async def get_message(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
-    full_name = message.from_user.full_name
-    username = message.from_user.username or "Не указан"
+    full_name = message.from_user.full_name or "Ismi korsatilmagan"
+    username = message.from_user.username or "Korsatilamagan"
     text = message.text
 
     admin_text = (
+        f"\t\t<b>User Info</b>\n"
         f"User ID: {user_id}\n"
         f"Username: {full_name} (@{username})\n"
         f"Premium: {message.from_user.is_premium}\n"
