@@ -1,51 +1,79 @@
-from aiogram import types
-from aiogram.dispatcher import FSMContext
+from aiogram import Router, types, F
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import ReplyKeyboardRemove, ContentType
 
-from keyboards import keyboards
-from keyboards.keyboards import keyboard
-from loader import dp, bot
-from main.config import ADMINS
-from states.states import UserStates
+from keyboards.common import phone_number_share_keyboard
+from keyboards.default.user import user_main_menu_keyboard, languages
+from loader import _
+from utils.db_commands.user import get_user, add_user
+from utils.get_location import get_full_address
 
-
-@dp.message_handler(commands="start")
-async def start_handler(message: types.Message):
-    text = f"<b> Assalomu alaykum\t{message.from_user.full_name}\tTJ-food (test) botiga hush kelibsiz </b>"
-    await message.answer(text=text, reply_markup=keyboard)
+router = Router()
 
 
-@dp.message_handler(text=["🍴 Меню"])
-async def menyu(message: types.Message):
-    await message.answer("Bizda hozircha menyu shakillangani yo'q. Tayyor bo'lishi bilan xabar beramiz!")
+class RegisterState(StatesGroup):
+    language = State()
+    full_name = State()
+    phone_number = State()
 
 
-@dp.message_handler(text=["🛍 Мои заказы"])
-async def zakazlar(message: types.Message):
-    await message.answer("Bot hali ishga tushmagan. Zakaz qilish uchun ishga tushishini kuting.")
+@router.message(F.content_type == ContentType.LOCATION)
+async def get_full_location(message: types.Message):
+    address = await get_full_address(latitude=message.location.latitude, longitude=message.location.longitude)
+    await message.answer(text=address)
 
 
-@dp.message_handler(text=["✍️ Оставить отзыв"])
-async def handle_user_message(message: types.Message, state: FSMContext):
-    await message.answer("Habaringizni kiriting: 👇")
-    await UserStates.get_message.set()
+@router.message(F.text == "/start")
+async def start_handler(message: types.Message, state: FSMContext):
+    await state.clear()
+    user = await get_user(chat_id=message.chat.id)
+    if user:
+        text = f"Welcome back, {message.chat.first_name}!"
+        await message.answer(text=text, reply_markup=await user_main_menu_keyboard())
+    else:
+        text = "Iltimos, til tanlang:"
+        await message.answer(text=text, reply_markup=languages)
+        await state.set_state(RegisterState.language)
 
 
-@dp.message_handler(state=UserStates.get_message, content_types=types.ContentType.TEXT)
-async def get_message(message: types.Message, state: FSMContext):
-    user_id = message.from_user.id
-    full_name = message.from_user.full_name or "Ismi korsatilmagan"
-    username = message.from_user.username or "Korsatilamagan"
-    text = message.text
+@router.message(RegisterState.language)
+async def language_handler(message: types.Message, state: FSMContext):
+    language = message.text
+    if language == "O'zbekcha 🇺🇿":
+        language = "uz"
+    elif language == "Русский 🇷🇺":
+        language = "ru"
+    else:
+        language = "en"
+    await state.update_data(language=language)
+    text = _("Sorry, you have to enter your full name", locale=language)
+    await message.answer(text=text, reply_markup=ReplyKeyboardRemove())
+    await state.set_state(RegisterState.full_name)
 
-    admin_text = (
-        f"\t\t<b>User Info</b>\n"
-        f"User ID: {user_id}\n"
-        f"Username: {full_name} (@{username})\n"
-        f"Premium: {message.from_user.is_premium}\n"
-        f"Bot: {message.from_user.is_bot}\n"
-        f"Foydalanuvchi matni:\n{text}"
-    )
-    await bot.send_message(chat_id=ADMINS, text=admin_text)
 
-    await message.reply("Sizning xabaringiz yuborildi. Admin javobini kuting!")
-    await state.finish()
+@router.message(RegisterState.full_name)
+async def get_full_name_handler(message: types.Message, state: FSMContext):
+    await state.update_data(full_name=message.text)
+    data = await state.get_data()
+    language = data.get('language')
+
+    text = _("Telefon raqamingizni yuboring👇", locale=language)
+    await message.answer(text=text, reply_markup=await phone_number_share_keyboard())
+    await state.set_state(RegisterState.phone_number)
+
+
+@router.message(RegisterState.phone_number, F.content_type == ContentType.CONTACT)
+async def get_phone_number_handler(message: types.Message, state: FSMContext):
+    await state.update_data(phone_number=message.contact.phone_number)
+    data = await state.get_data()
+    language = data.get('language')
+
+    new_user = await add_user(message=message, data=data)
+    if new_user:
+        text = _("Siz muovafaqiyatli royhatdan otdingiz✅", locale=language)
+        await message.answer(text=text, reply_markup=await user_main_menu_keyboard())
+    else:
+        text = _("Qayta urinib koring😔", locale=language)
+        await message.answer(text=text)
+    await state.clear()
