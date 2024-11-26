@@ -2,7 +2,7 @@ from aiogram import Router, types
 from aiogram.filters import Text
 
 from loader import _
-from keyboards.default.user import settings_menu, user_main_menu_keyboard
+from keyboards import settings_menu, user_main_menu_keyboard
 
 router = Router()
 

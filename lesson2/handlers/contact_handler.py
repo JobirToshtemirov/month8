@@ -1,6 +1,6 @@
 from aiogram import Router, types
 from aiogram.filters import Text
-from loader import _
+from loader import *
 
 router = Router()
 

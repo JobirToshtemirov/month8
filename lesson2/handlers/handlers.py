@@ -3,11 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, ContentType
 
-from keyboards.common import phone_number_share_keyboard
-from keyboards.default.user import user_main_menu_keyboard, languages
-from loader import _
-from utils.db_commands.user import get_user, add_user
-from utils.get_location import get_full_address
+from keyboards.keyboards import phone_number_share_keyboard, languages, user_main_menu_keyboard
+from utils.db_commands import get_user, add_user
+from utils.location import get_full_address
 
 router = Router()
 
