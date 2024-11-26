@@ -1,6 +1,7 @@
 from aiogram import Router
 from sqlalchemy import insert, delete, select
-from main import database
+
+from databases.database import database
 from main.models import orders, user_basket, meals
 
 router = Router()

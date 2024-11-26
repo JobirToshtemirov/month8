@@ -4,7 +4,7 @@ from aiogram.i18n import I18n
 from aiogram.types import TelegramObject
 
 from main.config import I18N_DOMAIN, LOCALES_DIR
-from utils.db_commands.user import get_user
+from utils.db_commands import get_user
 
 
 async def get_lang(user_id: int) -> str:

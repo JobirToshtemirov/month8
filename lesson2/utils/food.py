@@ -2,7 +2,7 @@ from aiogram import types
 from aiogram.types import InlineKeyboardButton,p
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram import Router
-from main import database
+from databases.database import database
 from main.models import meals
 
 router = Router()
