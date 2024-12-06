@@ -74,3 +74,4 @@ def delete_book(book_id: int, db: Session = Depends(get_db)):
     db.delete(book)
     db.commit()
     return {"status": True, "detail": f"Book with ID {book_id} has been deleted"}
+.
