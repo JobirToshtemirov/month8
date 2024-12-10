@@ -1,10 +1,15 @@
 from sqlalchemy.orm import Session
 from . import models, schemas
+from .models import Author
 
 
 # Author CRUD
 def get_author(db: Session, author_id: int):
     return db.query(models.Author).filter(models.Author.id == author_id).first()
+
+
+def get_Author_by_email(db: Session, email: str):
+    return db.query(Author).filter(Author.email == email).first()
 
 
 def get_authors(db: Session, skip: int = 0, limit: int = 10):

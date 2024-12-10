@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 
 
@@ -29,6 +29,17 @@ class AuthorCreate(AuthorBase):
 class Author(AuthorBase):
     id: int
     books: List[Book] = []
+
+    class Config:
+        orm_mode = True
+
+
+class AuthorLogin(AuthorBase):
+    password: str
+
+
+class Author(AuthorBase):
+    id: int
 
     class Config:
         orm_mode = True
